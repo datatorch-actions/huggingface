@@ -1,6 +1,6 @@
 $schema: http://datatorch.io/schema/action.v1.json
 name: Hugging Face model
-description: Runs a model from the Hugging Face Hub. Today's tasks, object detection and image segmentation, return what the model found as annotations; more tasks come as DataTorch learns more result types.
+description: Runs a model from the Hugging Face Hub on one image. Object detection and image segmentation return what the model found as annotations; image classification returns what the image is.
 inputs:
   imagePath:
     type: string
@@ -19,14 +19,17 @@ inputs:
     options:
       - object-detection
       - image-segmentation
-    description: What the model does. More tasks are added as DataTorch gains result types for them.
+      - image-classification
+    description: What the model does
   threshold:
     type: float
     default: 0.5
-    description: Keep results at or above this confidence (0 to 1)
+    description: Keep detections at or above this confidence (0 to 1); classification ignores it
 outputs:
   annotations:
-    description: Shapes found in the image; DataTorch puts them on the file
+    description: Shapes found in the image (detection, segmentation); DataTorch puts them on the file
+  classification:
+    description: What the image is (classification), the top label with its score and the runners-up
 runs:
   using: python
   main: run.py

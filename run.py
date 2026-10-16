@@ -1,9 +1,11 @@
-"""Run a model from the Hugging Face Hub on one image and return annotations.
+"""Run a model from the Hugging Face Hub on one image.
 
 Object detection: each result's box becomes a bbox. Image segmentation:
 each result's mask becomes one or more polygons (its outer contours).
-Labels are the model's own class names; DataTorch creates any the
-project does not have yet.
+Both return `annotations`; labels are the model's own class names, and
+DataTorch creates any the project does not have yet. Image
+classification returns `classification`: the top label with its score
+and the runners-up, kept on the run (the file's metadata is yours).
 """
 import os
 import sys
@@ -21,8 +23,9 @@ threshold = float(datatorch.get_input("threshold") or 0.5)
 if not model:
     print("No model id given.")
     sys.exit(1)
-if task not in ("object-detection", "image-segmentation"):
-    print(f"Unsupported task '{task}': use object-detection or image-segmentation.")
+TASKS = ("object-detection", "image-segmentation", "image-classification")
+if task not in TASKS:
+    print(f"Unsupported task '{task}': use one of {', '.join(TASKS)}.")
     sys.exit(1)
 
 image = Image.open(image_path).convert("RGB")
@@ -32,6 +35,15 @@ token = os.environ.get("HF_TOKEN")
 if token:
     kwargs["token"] = token
 runner = pipeline(task, model=model, **kwargs)
+
+if task == "image-classification":
+    ranked = sorted(runner(image, top_k=5), key=lambda r: -float(r["score"]))
+    top = [{"label": str(r["label"]), "score": float(r["score"])} for r in ranked]
+    print(f"Top: {top[0]['label']} ({top[0]['score']:.2f})")
+    datatorch.set_output(
+        "classification", {"label": top[0]["label"], "score": top[0]["score"], "top": top}
+    )
+    sys.exit(0)
 
 annotations = []
 if task == "object-detection":
