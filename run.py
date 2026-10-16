@@ -29,11 +29,40 @@ if task not in TASKS:
     sys.exit(1)
 
 image = Image.open(image_path).convert("RGB")
-print(f"Loading {model} for {task}")
 kwargs = {}
 token = os.environ.get("HF_TOKEN")
 if token:
     kwargs["token"] = token
+
+# The model's architecture says what it can do; a wrong task fails deep
+# inside Transformers with an unreadable error, so check first.
+TASK_OF_HEAD = (
+    ("ForObjectDetection", "object-detection"),
+    ("ForZeroShotObjectDetection", "object-detection"),
+    ("ForImageClassification", "image-classification"),
+    ("ForUniversalSegmentation", "image-segmentation"),
+    ("ForInstanceSegmentation", "image-segmentation"),
+    ("ForSemanticSegmentation", "image-segmentation"),
+    ("ForImageSegmentation", "image-segmentation"),
+    ("ForSegmentation", "image-segmentation"),
+)
+try:
+    from transformers import AutoConfig
+
+    architectures = list(AutoConfig.from_pretrained(model, **kwargs).architectures or [])
+except Exception as ex:  # a private or missing model
+    print(f"Could not read the model {model} from the Hub: {ex}")
+    sys.exit(1)
+supported = {t for arch in architectures for head, t in TASK_OF_HEAD if arch.endswith(head)}
+if architectures and supported and task not in supported:
+    print(
+        f"{model} is built for {' or '.join(sorted(supported))} "
+        f"({', '.join(architectures)}), not {task}. Set the task input to "
+        f"{sorted(supported)[0]}, or pick a model made for {task}."
+    )
+    sys.exit(1)
+
+print(f"Loading {model} for {task}")
 runner = pipeline(task, model=model, **kwargs)
 
 if task == "image-classification":
