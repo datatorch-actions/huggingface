@@ -1,6 +1,6 @@
 $schema: http://datatorch.io/schema/action.v1.json
-name: Hugging Face vision model
-description: Runs a Hugging Face vision model (object detection or image segmentation) on one image and returns what it found as annotations.
+name: Hugging Face model
+description: Runs a model from the Hugging Face Hub. Today's tasks, object detection and image segmentation, return what the model found as annotations; more tasks come as DataTorch learns more result types.
 inputs:
   imagePath:
     type: string
@@ -19,7 +19,7 @@ inputs:
     options:
       - object-detection
       - image-segmentation
-    description: What the model does
+    description: What the model does. More tasks are added as DataTorch gains result types for them.
   threshold:
     type: float
     default: 0.5

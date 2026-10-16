@@ -1,4 +1,4 @@
-"""Run a Hugging Face vision model on one image and return annotations.
+"""Run a model from the Hugging Face Hub on one image and return annotations.
 
 Object detection: each result's box becomes a bbox. Image segmentation:
 each result's mask becomes one or more polygons (its outer contours).
