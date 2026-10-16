@@ -1,0 +1,32 @@
+$schema: http://datatorch.io/schema/action.v1.json
+name: Hugging Face vision model
+description: Runs a Hugging Face vision model (object detection or image segmentation) on one image and returns what it found as annotations.
+inputs:
+  imagePath:
+    type: string
+    required: true
+    description: Path of the image on disk
+  model:
+    type: string
+    required: true
+    description: >
+      The model id on the Hub, e.g. facebook/detr-resnet-50 or
+      facebook/mask2former-swin-tiny-coco-instance. A private model needs
+      HF_TOKEN in the runner's environment.
+  task:
+    type: string
+    default: object-detection
+    options:
+      - object-detection
+      - image-segmentation
+    description: What the model does
+  threshold:
+    type: float
+    default: 0.5
+    description: Keep results at or above this confidence (0 to 1)
+outputs:
+  annotations:
+    description: Shapes found in the image; DataTorch puts them on the file
+runs:
+  using: python
+  main: run.py
